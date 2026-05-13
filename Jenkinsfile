@@ -1,21 +1,9 @@
 pipeline {
     agent any
+
     stages {
-        stage('Cleanup Workspace') {
-            agent {
-                docker {
-                    image 'node:18-alpine'
-                    reuseNode true
-                    args '-u root:root'
-                }
-            }
-            steps {
-                sh '''
-                    echo "Cleaning old files with root permission..."
-                    rm -rf node_modules build test-results playwright-report
-                '''
-            }
-        }
+        /*
+
         stage('Build') {
             agent {
                 docker {
@@ -25,73 +13,64 @@ pipeline {
             }
             steps {
                 sh '''
-                    echo "Starting Build Stage..."
-
                     ls -la
                     node --version
                     npm --version
-
                     npm ci
                     npm run build
-
-                    echo "Build completed successfully"
                     ls -la
                 '''
             }
         }
+        */
 
-        stage('Tests'){
+        stage('Tests') {
             parallel {
-                stage('Test') {
+                stage('Unit tests') {
                     agent {
                         docker {
                             image 'node:18-alpine'
                             reuseNode true
                         }
                     }
+
                     steps {
                         sh '''
-                            echo "Starting Test Stage after Build..."
-
-                            if test -f build/index.html; then
-                                echo "build/index.html exists."
-                            else
-                                echo "build/index.html does not exist."
-                                exit 1
-                            fi
-
+                            #test -f build/index.html
                             npm test
                         '''
                     }
                     post {
                         always {
-                            junit 'test-results/junit-report.xml'
+                            junit 'jest-results/junit.xml'
                         }
                     }
                 }
-                stage('E2E Test') {
+
+                stage('E2E') {
                     agent {
                         docker {
                             image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
-                            reuseNode true                  
+                            reuseNode true
                         }
                     }
+
                     steps {
                         sh '''
                             npm install serve
-                            npx serve -s build -l 3000 &
+                            node_modules/.bin/serve -s build &
                             sleep 10
-                            npx playwright test --reporter=html --output=test-results/playwright-junit.xml
+                            npx playwright test  --reporter=html
                         '''
                     }
+
                     post {
                         always {
-                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'HTML Report', reportTitles: '', useWrapperFileDirectly: true])
+                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report', reportTitles: '', useWrapperFileDirectly: true])
                         }
                     }
                 }
             }
-      
-        }   
+        }
     }
 }

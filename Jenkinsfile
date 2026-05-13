@@ -102,23 +102,19 @@ pipeline {
                     reuseNode true
                 }
             }
-            steps {               
+             steps {
                 sh '''
-                    echo "Deploying to staging environment..."
-                    npm install netlify-cli@20.1.1
-                    node_modules/.bin/netlify --version                
-                    echo $NETLIFY_SITE_ID
-                    echo $NETLIFY_AUTH_TOKEN
+                    npm install netlify-cli node-jq
+                    node_modules/.bin/netlify --version
+                    echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"
                     node_modules/.bin/netlify status
                     node_modules/.bin/netlify deploy --dir=build --json > deploy-output.json
                 '''
                 script {
-                    def deployOutput = readJSON file: 'deploy-output.json'
-                    env.STAGING_URL = deployOutput.deploy_url
-                    echo "Staging URL: ${env.STAGING_URL}"
+                    env.STAGING_URL = sh(script: "node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json", returnStdout: true)
                 }
-
             }
+
         }
 
         stage('Staging E2E') {

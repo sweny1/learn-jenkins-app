@@ -1,23 +1,21 @@
 pipeline {
     agent any
-    
-    stage('Cleanup Workspace') {
-        agent {
-            docker {
-                image 'node:18-alpine'
-                reuseNode true
-                args '-u root:root'
+    stages {
+        stage('Cleanup Workspace') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                    args '-u root:root'
+                }
+            }
+            steps {
+                sh '''
+                    echo "Cleaning old files with root permission..."
+                    rm -rf node_modules build test-results playwright-report
+                '''
             }
         }
-        steps {
-            sh '''
-                echo "Cleaning old files with root permission..."
-                rm -rf node_modules build test-results playwright-report
-            '''
-        }
-    }
-
-    stages {
         stage('Build') {
             agent {
                 docker {

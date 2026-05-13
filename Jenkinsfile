@@ -1,7 +1,21 @@
 pipeline {
     agent any
-
     stages {
+        stage('Cleanup Workspace') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                    args '-u root:root'
+                }
+            }
+            steps {
+                sh '''
+                    echo "Cleaning old files with root permission..."
+                    rm -rf node_modules build test-results playwright-report
+                '''
+            }
+        }
         stage('Build') {
             agent {
                 docker {
@@ -26,25 +40,63 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            agent {
-                docker {
-                    image 'node:18-alpine'
-                    reuseNode true
+        stage('Tests'){
+            parallel {
+                stage('Unit tests') {
+                    agent {
+                         docker {
+                            image 'node:18-alpine'
+                            reuseNode true
+                        }                                       
+                    }
+                    steps {
+                        sh '''
+                            mkdir -p jest-results
+
+                            JEST_JUNIT_OUTPUT_DIR=jest-results \
+                            JEST_JUNIT_OUTPUT_NAME=junit.xml \
+                            CI=true npm test -- --watchAll=false
+                        '''
+                    }
+                    post {
+                        always {
+                            junit allowEmptyResults: true, testResults: 'jest-results/junit.xml'
+                        }
+                    }
+                }
+                stage('E2E Test') {
+                    agent {
+                        docker {
+                            image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                            reuseNode true                  
+                        }
+                    }
+                    steps {
+                        sh '''
+                            npm install serve
+                            npx serve -s build -l 3000 &
+                            sleep 10
+                            npx playwright test --reporter=html --output=test-results/playwright-junit.xml
+                        '''
+                    }
+                    post {
+                        always {
+                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'HTML Report', reportTitles: '', useWrapperFileDirectly: true])
+                        }
+                    }
                 }
             }
+      
+        }   
+
+        stage('Deploy') {
             steps {
+                echo 'Start Deploying...'
                 sh '''
-                    echo "Starting Test Stage after Build..."
-
-                    if test -f build/index.html; then
-                        echo "build/index.html exists."
-                    else
-                        echo "build/index.html does not exist."
-                        exit 1
-                    fi
-
-                    npm test
+                    echo "Deploying to production environment..."
+                    npm install netlify-cli@20.1.1
+                    node_modules/.bin/netlify --version
+                    
                 '''
             }
         }

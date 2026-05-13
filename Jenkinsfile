@@ -90,8 +90,7 @@ pipeline {
         }   
 
         stage('Deploy') {
-            steps {
-                echo 'Start Deploying...'
+            steps {               
                 sh '''
                     echo "Deploying to production environment..."
                     npm install netlify-cli@20.1.1

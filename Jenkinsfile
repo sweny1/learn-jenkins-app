@@ -61,7 +61,7 @@ pipeline {
                     npm install serve
                     npx serve -s build -l 3000 &
                     sleep 10
-                    npx playwright test
+                    npx playwright test --reporter=junit --output=test-results/playwright-junit.xml
 
                 '''
 
@@ -71,7 +71,7 @@ pipeline {
 
     post {
         always {
-            junit 'test-results/junit.xml'
+            junit 'test-results/**/*.xml'
         }
     }
 }

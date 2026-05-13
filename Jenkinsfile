@@ -11,12 +11,17 @@ pipeline {
             }
             steps {
                 sh '''
+                    echo "Starting Build Stage..."
+
                     ls -la
                     node --version
                     npm --version
+
                     npm ci
                     npm run build
-                    ls -la 
+
+                    echo "Build completed successfully"
+                    ls -la
                 '''
             }
         }
@@ -30,12 +35,15 @@ pipeline {
             }
             steps {
                 sh '''
-                    if test -f build/index.html;then
+                    echo "Starting Test Stage after Build..."
+
+                    if test -f build/index.html; then
                         echo "build/index.html exists."
                     else
                         echo "build/index.html does not exist."
                         exit 1
                     fi
+
                     npm test
                 '''
             }

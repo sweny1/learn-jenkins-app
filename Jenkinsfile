@@ -110,6 +110,7 @@ pipeline {
                     echo $NETLIFY_SITE_ID
                     echo $NETLIFY_AUTH_TOKEN
                     node_modules/.bin/netlify status
+                    node_modules/.bin/netlify deploy --dir=build --prod 
                 '''
             }
         }

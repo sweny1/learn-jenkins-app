@@ -127,13 +127,14 @@ pipeline {
                 }
             }
 
-            echo "Staging E2E is starting at ${env.CI_ENVIRONMENT_URL}"
+          
 
             environment {
                 CI_ENVIRONMENT_URL = "${env.STAGING_URL}"
             }
 
             steps {
+                echo "Staging E2E is starting at ${env.CI_ENVIRONMENT_URL}"
                 sh '''
                     npx playwright test  --reporter=html
                 '''

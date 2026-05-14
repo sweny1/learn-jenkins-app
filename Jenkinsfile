@@ -7,7 +7,7 @@ pipeline {
     }
 
     stages {
-        stage('Cleanup Workspace') {
+       /* stage('Cleanup Workspace') {
             agent {
                 docker {
                     image 'node:18-alpine'
@@ -21,7 +21,7 @@ pipeline {
                     rm -rf node_modules build test-results playwright-report
                 '''
             }
-        }
+        } */
         stage('Build') {
             agent {
                 docker {
@@ -112,6 +112,8 @@ pipeline {
                 '''
                 script {
                     env.STAGING_URL = sh(script: "node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json", returnStdout: true)
+                        .trim()
+                    echo "Staging URL: ${env.STAGING_URL}"
                 }
             }
 
@@ -124,6 +126,8 @@ pipeline {
                     reuseNode true
                 }
             }
+
+            echo "Staging E2E is starting at ${env.CI_ENVIRONMENT_URL}"
 
             environment {
                 CI_ENVIRONMENT_URL = "${env.STAGING_URL}"

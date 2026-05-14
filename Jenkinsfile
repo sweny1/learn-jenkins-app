@@ -9,15 +9,7 @@ pipeline {
 
 
     stages {
-
-        stage('Docker'){
-            steps{
-                sh '''
-                    echo "Building Docker image..."
-                    docker build -t my-playwright .
-                '''
-            }
-        }
+       
        /* stage('Cleanup Workspace') {
             agent {
                 docker {

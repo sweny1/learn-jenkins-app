@@ -1,0 +1,22 @@
+pipeline {
+    agent any
+
+    stages {
+
+        stage('Docker'){
+            steps{
+                sh '''
+                    echo "Building Docker image..."
+                    docker build -t my-playwright .
+                '''
+            }
+        }
+
+        stage('Trigger Main Pipeline') {
+            steps {
+                build job: 'learn-jenkins-app', wait: false
+            }
+        }
+
+    }
+}

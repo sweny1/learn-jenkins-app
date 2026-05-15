@@ -11,30 +11,7 @@ pipeline {
 
     stages {
 
-        stage('AWS'){
-
-            agent {
-                docker {
-                    image 'amazon/aws-cli:2.11.7'
-                    args "--entrypoint=''"
-                    reuseNode true
-                }
-            }
-
-            environment {
-                AWS_S3_BUCKET = 'sweny-learn-jenkins-app'
-            }
-
-            steps{
-                    withCredentials([usernamePassword(credentialsId: 'aws-cred', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
-                        sh '''
-                            echo "Hello S3!" > index.html
-                            aws s3 cp index.html s3://$AWS_S3_BUCKET/index.html
-                        '''
-                    }
-                
-            }
-        }
+      
        
        /* stage('Cleanup Workspace') {
             agent {
@@ -72,6 +49,30 @@ pipeline {
                     echo "Build completed successfully"
                     ls -la
                 '''
+            }
+        }
+
+        stage('AWS'){
+
+            agent {
+                docker {
+                    image 'amazon/aws-cli:2.11.7'
+                    args "--entrypoint=''"
+                    reuseNode true
+                }
+            }
+
+            environment {
+                AWS_S3_BUCKET = 'sweny-learn-jenkins-app'
+            }
+
+            steps{
+                    withCredentials([usernamePassword(credentialsId: 'aws-cred', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                        sh '''
+                            aws s3 sync build/ s3://$AWS_S3_BUCKET/ 
+                        '''
+                    }
+                
             }
         }
 

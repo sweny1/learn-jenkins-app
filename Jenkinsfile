@@ -9,6 +9,23 @@ pipeline {
 
 
     stages {
+
+        stage('AWS'){
+            
+            agent {
+                docker {
+                    image 'amazon/aws-cli:2.11.7'
+                    reuseNode true
+                }
+            }
+
+            steps{
+                sh '''
+                    echo "AWS CLI version:"
+                    aws --version
+                '''
+            }
+        }
        
        /* stage('Cleanup Workspace') {
             agent {

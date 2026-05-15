@@ -5,6 +5,7 @@ pipeline {
         NETLIFY_SITE_ID = 'e25ac398-971e-47e0-ada1-b528e9d087b7'
         NETLIFY_AUTH_TOKEN = credentials('netlify-token')
         REACT_APP_VERSION = "1.0.${BUILD_ID}"
+        
     }
 
 
@@ -20,10 +21,16 @@ pipeline {
                 }
             }
 
+            environment {
+                AWS_S3_BUCKET = 'sweny-learn-jenkins-app'
+            }
+
             steps{
                 sh '''
-                    echo "AWS CLI version:"
-                    aws --version
+                    withCredentials([usernamePassword(credentialsId: 'aws-cred', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                       echo "Hello S3!" > index.html
+                       aws s3 cp index.html s3://$AWS_S3_BUCKET/index.html
+                    }
                 '''
             }
         }
